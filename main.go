@@ -13,7 +13,7 @@ var conf config.Config
 
 // TODO: move this out into its own package.
 func listPulls(repo string) {
-	log.Print("Checking pulls for ", repo)
+	log.Printf("Checking pulls in %v for %v\n", conf.Organization, repo)
 	client := github.NewClient(nil)
 	owner := conf.Organization
 	var now = time.Now().Unix()
@@ -38,7 +38,9 @@ func listPulls(repo string) {
 func main() {
 	conf = config.NewConfig()
 	for {
-		listPulls("client")
+		for _, r := range conf.Repos {
+			listPulls(r)
+		}
 		time.Sleep(conf.CheckInterval)
 	}
 }
