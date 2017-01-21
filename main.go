@@ -2,15 +2,20 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/eeddins/client/config"
 	"github.com/google/go-github/github"
 )
 
-func main() {
+var conf config.Config
+
+// TODO: move this out into its own package.
+func listPulls(repo string) {
+	log.Print("Checking pulls for ", repo)
 	client := github.NewClient(nil)
-	owner := "eeddins"
-	repo := "test"
+	owner := conf.Organization
 	var now = time.Now().Unix()
 
 	// pulls attributes from PullRequests.go
@@ -21,11 +26,19 @@ func main() {
 	}
 
 	for _, prl := range prlist {
-		if now-prl.UpdatedAt.Unix() > 200 {
+		if age := now - prl.UpdatedAt.Unix(); age > int64(conf.MaxAge) {
 			fmt.Printf("User who initiated pull %v\n", *prl.User.Login)
 			fmt.Printf("Current state of pull %v\n", *prl.State)
 			fmt.Printf("Pull request created at %v\n", prl.CreatedAt)
 			fmt.Printf("Pull request updated at %v\n", prl.UpdatedAt)
 		}
+	}
+}
+
+func main() {
+	conf = config.NewConfig()
+	for {
+		listPulls("client")
+		time.Sleep(conf.CheckInterval)
 	}
 }
